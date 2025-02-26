@@ -1,0 +1,113 @@
+---
+- name: Install packages on a server
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install essential packages
+      apt:
+        name:
+          - curl
+          - unzip
+          - git
+          - make
+          - gcc
+          - neovim
+          - mysql-server
+          - docker.io
+          - nodejs
+          - npm
+          - nginx
+          - ripgrep
+          - xclip
+        state: present
+        update_cache: yes
+
+    - name: Install PHP and required extensions
+      apt:
+        name:
+          - php
+          - php-cli
+          - php-mbstring
+          - php-xml
+          - php-curl
+          - php-zip
+          - php-mysql
+        state: present
+        update_cache: yes
+
+    - name: Download Composer installer
+      get_url:
+        url: https://getcomposer.org/installer
+        dest: /tmp/composer-installer.php
+
+    - name: Install Composer
+      command: php /tmp/composer-installer.php --install-dir=/usr/local/bin --filename=composer
+
+    - name: Remove Composer installer
+      file:
+        path: /tmp/composer-installer.php
+        state: absent
+
+    - name: Install Laravel globally via Composer
+      command: composer global require laravel/installer
+      become_user: "{{ ansible_user }}"
+
+    - name: Install Docker Compose
+      apt:
+        name: docker-compose
+        state: present
+        update_cache: yes
+
+    - name: Install Zidox from GitHub
+      git:
+        repo: 'https://github.com/zidox/zidox.git'
+        dest: '/usr/local/bin/zidox'
+        clone: yes
+        update: yes
+
+    - name: Make Zidox executable
+      file:
+        path: /usr/local/bin/zidox
+        mode: '0755'
+
+    - name: Install fzf (Fuzzy Finder) via Git
+      git:
+        repo: 'https://github.com/junegunn/fzf.git'
+        dest: '/usr/local/share/fzf'
+        clone: yes
+
+    - name: Run fzf install script
+      command: /usr/local/share/fzf/install --no-bash --no-fish
+
+    - name: Create symlink for fzf
+      file:
+        src: /usr/local/share/fzf/bin/fzf
+        dest: /usr/local/bin/fzf
+        state: link
+        mode: '0755'
+
+    # Install Lazygit manually from GitHub release (for Linux x86_64)
+    - name: Download Lazygit latest release tarball
+      get_url:
+        url: "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_Linux_x86_64.tar.gz"
+        dest: "/tmp/lazygit.tar.gz"
+
+    - name: Create directory for Lazygit extraction
+      file:
+        path: "/tmp/lazygit"
+        state: directory
+
+    - name: Extract Lazygit archive
+      unarchive:
+        src: "/tmp/lazygit.tar.gz"
+        dest: "/tmp/lazygit"
+        remote_src: yes
+
+    - name: Move Lazygit binary to /usr/local/bin
+      command: mv /tmp/lazygit/lazygit /usr/local/bin/lazygit
+
+    - name: Ensure Lazygit is executable
+      file:
+        path: /usr/local/bin/lazygit
+        mode: '0755'
+
