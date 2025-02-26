@@ -50,7 +50,7 @@
 
     - name: Install Laravel globally via Composer
       command: composer global require laravel/installer
-      become_user: "{{ ansible_user }}"
+        #become_user: "{{ ansible_user }}"
 
     - name: Install Docker Compose
       apt:
@@ -86,10 +86,14 @@
         state: link
         mode: '0755'
 
-    # Install Lazygit manually from GitHub release (for Linux x86_64)
+    # Install Lazygit using the latest release
+    - name: Get Lazygit latest version
+      command: "curl -s 'https://api.github.com/repos/jesseduffield/lazygit/releases/latest' | grep -Po '\"tag_name\": *\"v\\K[^\"]*'"
+      register: lazygit_version
+
     - name: Download Lazygit latest release tarball
       get_url:
-        url: "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_Linux_x86_64.tar.gz"
+        url: "https://github.com/jesseduffield/lazygit/releases/download/v{{ lazygit_version.stdout }}/lazygit_{{ lazygit_version.stdout }}_Linux_x86_64.tar.gz"
         dest: "/tmp/lazygit.tar.gz"
 
     - name: Create directory for Lazygit extraction
@@ -111,3 +115,24 @@
         path: /usr/local/bin/lazygit
         mode: '0755'
 
+    # Install Kickstart Neovim
+    - name: Add Neovim unstable PPA
+      apt_repository:
+        repo: ppa:neovim-ppa/unstable
+        state: present
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install Kickstart Neovim and dependencies
+      apt:
+        name:
+          - make
+          - gcc
+          - ripgrep
+          - unzip
+          - git
+          - xclip
+          - neovim
+        state: present
