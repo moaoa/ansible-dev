@@ -58,17 +58,6 @@
         state: present
         update_cache: yes
 
-    - name: Install Zidox from GitHub
-      git:
-        repo: 'https://github.com/zidox/zidox.git'
-        dest: '/usr/local/bin/zidox'
-        clone: yes
-        update: yes
-
-    - name: Make Zidox executable
-      file:
-        path: /usr/local/bin/zidox
-        mode: '0755'
 
     - name: Install fzf (Fuzzy Finder) via Git
       git:
@@ -135,4 +124,15 @@
           - git
           - xclip
           - neovim
+        state: present
+
+    - name: Download and install zoxide
+      command: curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh
+      args:
+        executable: /bin/bash
+
+    - name: Add zoxide initialization to .bashrc
+      lineinfile:
+        path: ~/.bashrc
+        line: 'eval "$(zoxide init bash)"'
         state: present
