@@ -51,6 +51,20 @@
     - name: Install Laravel globally via Composer
       command: composer global require laravel/installer
         #become_user: "{{ ansible_user }}"
+        #
+
+    - name: إعداد اللغة العربية على لوحة المفاتيح
+      tasks:
+        - name: تثبيت الحزم المطلوبة
+          apt:
+            name:
+              - language-pack-ar
+              - console-setup
+            state: present
+            update_cache: yes
+
+        - name: تعيين تخطيط لوحة المفاتيح إلى العربية
+          command: localectl set-keymap ar
 
     - name: Install Docker Compose
       apt:
